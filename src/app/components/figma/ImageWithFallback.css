@@ -1,0 +1,20 @@
+.image-with-fallback {
+  display: inline-block;
+  background-color: #f3f4f6;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.image-with-fallback__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.image-with-fallback__img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}

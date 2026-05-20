@@ -1,0 +1,113 @@
+/* ══════════════════════════════════════════
+   HOMEPAGE STYLES
+══════════════════════════════════════════ */
+
+/* Hero section carousel */
+.homePage__hero {
+  height: min(92vh, 780px);
+}
+
+/* Hero image with fade and scale transitions */
+.homePage__heroImage,
+.homePage__heroContent {
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.homePage__heroImage {
+  opacity: 0;
+  transform: scale(1.03);
+}
+
+.homePage__heroImage--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.homePage__heroImage--hidden {
+  opacity: 0;
+  transform: scale(1.03);
+}
+
+/* Hero gradient overlay */
+.homePage__heroGradient {
+  background: linear-gradient(
+    160deg,
+    rgba(5, 15, 35, 0.3) 0%,
+    rgba(5, 15, 35, 0.5) 40%,
+    rgba(5, 15, 35, 0.88) 100%
+  );
+}
+
+/* Hero blue tint overlay */
+.homePage__heroBlueAccent {
+  background: linear-gradient(
+    90deg,
+    rgba(37, 99, 235, 0.22) 0%,
+    transparent 60%
+  );
+}
+
+/* Hero content fade and slide */
+.homePage__heroContent {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.homePage__heroContent--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.homePage__heroContent--hidden {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+/* Indicator dots styling */
+.homePage__indicatorDot {
+  transition: all 0.3s ease;
+  border-radius: 9999px;
+}
+
+.homePage__indicatorDot--active {
+  width: 28px;
+  height: 10px;
+  background: #fff;
+}
+
+.homePage__indicatorDot--inactive {
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Progress bar animation */
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.homePage__progressBar {
+  animation: progress 6s linear forwards;
+}
+
+/* Final CTA section with gradient background */
+.homePage__finalCTA {
+  background:
+    radial-gradient(
+      ellipse at 30% 50%,
+      rgba(37, 99, 235, 0.35) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 70% 50%,
+      rgba(16, 185, 129, 0.2) 0%,
+      transparent 60%
+    );
+}
