@@ -2,6 +2,8 @@
 import logo from "@/assets/logo-centre.jpg";
 
 export function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="bg-[#1F2937] text-white pt-12 pb-6">
       <div className="max-w-7xl mx-auto px-4">
@@ -21,7 +23,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-white/70 text-sm">
-              Votre sante est notre priorite. Des soins de qualite avec
+              Votre santé est notre priorité. Des soins de qualité avec
               compassion et professionnalisme.
             </p>
           </div>
@@ -36,7 +38,7 @@ export function Footer() {
               </li>
               <li>
                 <a href="#" className="hover:text-white transition-colors">
-                  A Propos
+                  À propos
                 </a>
               </li>
               <li>
@@ -55,7 +57,7 @@ export function Footer() {
           <div>
             <h4 className="mb-4">Nos Services</h4>
             <ul className="space-y-2 text-sm text-white/70">
-              <li>Consultation Generale</li>
+              <li>Consultation générale</li>
               <li>Consultations spécialisées</li>
               <li>Laboratoire</li>
               <li>Pharmacie</li>
@@ -74,13 +76,13 @@ export function Footer() {
               </div>
               <div className="flex items-start gap-2">
                 <Mail className="w-4 h-4 mt-1 flex-shrink-0" />
-                <p>cms.notredamefatima@gmail.com</p>
+                <p className="break-all">cms.notredamefatima@gmail.com</p>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
                 <p>
                   Avedji <br />
-                  Lome, Togo
+                  Lomé, Togo
                 </p>
               </div>
             </div>
@@ -89,8 +91,8 @@ export function Footer() {
 
         <div className="border-t border-white/20 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-white/70">
-            © 2026 Centre Médical Catholique Notre Dame de Fatima. Tous droits
-            réservés.
+            © {currentYear} Centre Medico-social Catholique Notre Dame de
+            Fatima. Tous droits réservés.
           </p>
           <div className="flex items-center gap-2 text-sm text-white/70">
             <span>Made with</span>
