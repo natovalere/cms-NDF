@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Calendar,
   Bell,
@@ -19,31 +19,17 @@ import {
   nomComplet,
   type AdminUser,
 } from "@/medical/admins";
+import {
+  deleteAppointment,
+  listAppointments,
+  updateAppointmentStatus,
+} from "@/app/lib/appointmentsService";
+import type { ActionTrace, Appointment } from "@/app/lib/appointmentsStorage";
 
 interface AdminDashboardProps {
   onNavigate: (page: string) => void;
 }
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-interface ActionTrace {
-  par: string;
-  role: string;
-  action: string;
-  date: string;
-}
-
-interface Appointment {
-  id: number;
-  patient: string;
-  service: string;
-  time: string;
-  email?: string;
-  phone?: string;
-  status: "confirmed" | "waiting" | "pending";
-  trace?: ActionTrace;
-}
-
-// â”€â”€â”€ Badge de statut â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     confirmed: { label: "Confirmé", cls: "bg-green-100 text-green-700" },
@@ -58,7 +44,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// â”€â”€â”€ Utilitaires â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function dateHeure(): string {
   return new Date().toLocaleString("fr-FR", {
     day: "2-digit",
@@ -78,20 +63,17 @@ function creerTrace(admin: AdminUser, action: string): ActionTrace {
   };
 }
 
-// â”€â”€â”€ Composant principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [adminConnecte, setAdminConnecte] = useState<AdminUser | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
-  // â”€â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const afficherToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
   };
 
-  // — Vérification connexion —
   useEffect(() => {
     const admin = getAdminConnecte();
     if (!admin) {
@@ -101,21 +83,27 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     setAdminConnecte(admin);
   }, [onNavigate]);
 
-  // — Chargement données —
-  const chargerDonnees = () => {
-    const raw = localStorage.getItem("appointments");
-    if (raw) setAppointments([...JSON.parse(raw)].reverse());
+  const chargerDonnees = async () => {
+    try {
+      const rows = await listAppointments();
+      setAppointments(rows);
+    } catch (error) {
+      console.error(error);
+      afficherToast("Impossible de charger les rendez-vous.");
+    }
   };
 
   useEffect(() => {
     chargerDonnees();
   }, []);
+
   useEffect(() => {
-    const id = setInterval(chargerDonnees, 3000);
+    const id = setInterval(() => {
+      chargerDonnees();
+    }, 5000);
     return () => clearInterval(id);
   }, []);
 
-  // — Déconnexion —
   const handleLogout = () => {
     if (
       !confirm(
@@ -129,36 +117,42 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   if (!adminConnecte) return null;
 
-  // â”€â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const confirmerRDV = (id: number) => {
+  const confirmerRDV = async (id: number) => {
     const trace = creerTrace(adminConnecte, "Rendez-vous confirmé");
-    const updated = appointments.map((a) =>
-      a.id === id ? { ...a, status: "confirmed" as const, trace } : a,
-    );
-    setAppointments(updated);
-    localStorage.setItem("appointments", JSON.stringify(updated));
-    afficherToast(`Confirmé par ${nomComplet(adminConnecte)}`);
+    try {
+      await updateAppointmentStatus(id, "confirmed", trace);
+      await chargerDonnees();
+      afficherToast(`Confirmé par ${nomComplet(adminConnecte)}`);
+    } catch (error) {
+      console.error(error);
+      afficherToast("Erreur lors de la confirmation.");
+    }
   };
 
-  const mettreEnAttente = (id: number) => {
+  const mettreEnAttente = async (id: number) => {
     const trace = creerTrace(adminConnecte, "Mis en attente");
-    const updated = appointments.map((a) =>
-      a.id === id ? { ...a, status: "waiting" as const, trace } : a,
-    );
-    setAppointments(updated);
-    localStorage.setItem("appointments", JSON.stringify(updated));
-    afficherToast("Rendez-vous mis en attente.");
+    try {
+      await updateAppointmentStatus(id, "waiting", trace);
+      await chargerDonnees();
+      afficherToast("Rendez-vous mis en attente.");
+    } catch (error) {
+      console.error(error);
+      afficherToast("Erreur lors de la mise en attente.");
+    }
   };
 
-  const supprimerRDV = (id: number) => {
+  const supprimerRDV = async (id: number) => {
     if (!confirm("Supprimer définitivement ce rendez-vous ?")) return;
-    const updated = appointments.filter((a) => a.id !== id);
-    setAppointments(updated);
-    localStorage.setItem("appointments", JSON.stringify(updated));
-    afficherToast("Rendez-vous supprimé.");
+    try {
+      await deleteAppointment(id);
+      await chargerDonnees();
+      afficherToast("Rendez-vous supprimé.");
+    } catch (error) {
+      console.error(error);
+      afficherToast("Erreur lors de la suppression.");
+    }
   };
 
-  // â”€â”€â”€ Statistiques â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalRDV = appointments.length;
   const confirmedRDV = appointments.filter(
     (a) => a.status === "confirmed",
@@ -204,7 +198,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   return (
     <div className="min-h-screen bg-[#F3F4F6]">
-      {/* â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {toast && (
         <div className="fixed top-6 right-6 z-50 bg-[#1F2937] text-white text-sm px-5 py-3 rounded-xl shadow-lg flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-green-400" />
@@ -212,7 +205,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         </div>
       )}
 
-      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="bg-white border-b border-[#E5E7EB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap gap-4 justify-between items-center">
           <div>
@@ -220,10 +212,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               Tableau de bord
             </h1>
             <p className="text-sm text-[#6B7280]">
-              Centre Médical Notre Dame de Fatima
+              Centre Medico-social Notre Dame de Fatima
             </p>
-
-            {/* Info admin connecté */}
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <div className="w-7 h-7 bg-[#2563EB] rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {adminConnecte.avatar}
@@ -240,7 +230,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Cloche */}
             <button
               onClick={() => setActiveTab("appointments")}
               className="relative p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
@@ -274,7 +263,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        {/* â”€â”€ Cartes statistiques â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((s, i) => (
             <div
@@ -298,9 +286,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           ))}
         </div>
 
-        {/* â”€â”€ Panneau avec onglets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="bg-white rounded-xl border border-[#E5E7EB]">
-          {/* Onglets */}
           <div className="border-b border-[#E5E7EB] px-6 overflow-x-auto">
             <div className="flex min-w-max">
               {tabs.map((tab) => (
@@ -320,10 +306,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           </div>
 
           <div className="p-6">
-            {/* â”€â”€ Vue d'ensemble â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {activeTab === "overview" && (
               <div className="space-y-6">
-                {/* Alerte non traités */}
                 {pendingRDV > 0 && (
                   <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
                     <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
@@ -335,7 +319,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   </div>
                 )}
 
-                {/* Tableau récap */}
                 <div className="rounded-xl border border-[#E5E7EB] overflow-hidden">
                   <div className="px-5 py-4 bg-[#F9FAFB] border-b border-[#E5E7EB]">
                     <h2 className="font-medium text-[#1F2937] flex items-center gap-2 text-sm">
@@ -379,7 +362,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   </div>
                 </div>
 
-                {/* Aperçu des 5 derniers */}
                 {appointments.length > 0 && (
                   <div>
                     <h2 className="font-medium text-[#1F2937] mb-3 text-sm">
@@ -413,7 +395,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               </div>
             )}
 
-            {/* â”€â”€ Rendez-vous â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {activeTab === "appointments" && (
               <div className="space-y-3">
                 {appointments.length === 0 && (
@@ -434,7 +415,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     }`}
                   >
                     <div className="flex flex-wrap gap-3 items-start justify-between">
-                      {/* Infos patient */}
                       <div className="space-y-1.5 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-[#1F2937]">
@@ -443,7 +423,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                           <StatusBadge status={apt.status} />
                         </div>
                         <p className="text-sm text-[#6B7280]">
-                          {apt.service} — {apt.time}
+                          {apt.service} - {apt.time}
                         </p>
                         {apt.phone && (
                           <a
@@ -461,16 +441,14 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                             <Mail className="w-3.5 h-3.5" /> {apt.email}
                           </a>
                         )}
-                        {/* Trace */}
                         {apt.trace && (
                           <p className="text-xs text-[#9CA3AF] italic">
                             {apt.trace.action} par {apt.trace.par} (
-                            {apt.trace.role}) — {apt.trace.date}
+                            {apt.trace.role}) - {apt.trace.date}
                           </p>
                         )}
                       </div>
 
-                      {/* Boutons (masqués si confirmé) */}
                       {apt.status !== "confirmed" && (
                         <div className="flex flex-wrap gap-2 shrink-0">
                           <button
@@ -501,7 +479,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               </div>
             )}
 
-            {/* â”€â”€ Rapports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {activeTab === "reports" && (
               <div className="space-y-4">
                 <h2 className="font-medium text-[#1F2937] flex items-center gap-2 text-sm">
@@ -541,7 +518,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                           )}
                           {apt.trace && (
                             <p className="text-xs text-[#9CA3AF] mt-1 italic">
-                              Traité par {apt.trace.par} ({apt.trace.role}) —{" "}
+                              Traité par {apt.trace.par} ({apt.trace.role}) -{" "}
                               {apt.trace.date}
                             </p>
                           )}

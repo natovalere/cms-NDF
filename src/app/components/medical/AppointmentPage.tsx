@@ -1,17 +1,6 @@
-﻿import { useState } from "react";
+﻿import { useState, type ChangeEvent, type FormEvent } from "react";
 import { User, Phone, Mail, FileText, Clock, AlertCircle } from "lucide-react";
-
-interface Appointment {
-  id: number;
-  patient: string;
-  phone: string;
-  email: string;
-  service: string;
-  date: string;
-  message: string;
-  time: string;
-  status: "pending" | "waiting" | "confirmed";
-}
+import { createAppointment } from "@/app/lib/appointmentsService";
 
 export function AppointmentPage() {
   const [formData, setFormData] = useState({
@@ -54,7 +43,9 @@ export function AppointmentPage() {
       email: "",
     };
 
-    if (!phoneRegex.test(formData.phone)) {
+    const normalizedPhone = formData.phone.replace(/\s+/g, "");
+
+    if (!phoneRegex.test(normalizedPhone)) {
       newErrors.phone = "Numéro invalide. Exemple : +22890123456";
       valid = false;
     }
@@ -68,33 +59,21 @@ export function AppointmentPage() {
     return valid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
     try {
-      const existingAppointments = localStorage.getItem("appointments");
-      let appointments: Appointment[] = [];
-
-      if (existingAppointments) {
-        appointments = JSON.parse(existingAppointments);
-      }
-
-      const newAppointment: Appointment = {
-        id: Date.now(),
+      const normalizedPhone = formData.phone.replace(/\s+/g, "");
+      await createAppointment({
         patient: formData.name,
-        phone: formData.phone,
+        phone: normalizedPhone,
         email: formData.email,
         service: formData.service,
         date: formData.date,
         message: formData.message,
-        time: "À confirmer",
-        status: "pending",
-      };
-
-      const updatedAppointments = [...appointments, newAppointment];
-      localStorage.setItem("appointments", JSON.stringify(updatedAppointments));
+      });
 
       alert("Votre demande de rendez-vous a été enregistrée avec succès.");
 
@@ -108,7 +87,11 @@ export function AppointmentPage() {
       });
     } catch (error) {
       console.error(error);
-      alert("Une erreur est survenue. Veuillez réessayer.");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue. Veuillez réessayer.";
+      alert(message);
     }
   };
 
@@ -162,7 +145,7 @@ export function AppointmentPage() {
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                placeholder="+228 90123456"
+                placeholder="+228 90 12 34 56"
                 className="w-full px-4 py-3 border-2 rounded-xl"
               />
 
