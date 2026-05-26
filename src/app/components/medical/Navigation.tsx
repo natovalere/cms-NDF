@@ -70,7 +70,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
   };
 
   // â”€â”€â”€ Connexion avec le mot de passe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const handleConnexion = () => {
+  const handleConnexion = async () => {
     setErreur("");
     if (!motDePasse.trim()) {
       setErreur("Veuillez entrer votre mot de passe.");
@@ -79,16 +79,14 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     if (!adminChoisi) return;
 
     setChargement(true);
-    setTimeout(() => {
-      const admin = connecterAdmin(adminChoisi.email, motDePasse);
-      setChargement(false);
-      if (admin) {
-        fermerModal();
-        onNavigate("admin");
-      } else {
-        setErreur("Mot de passe incorrect. Réessayez.");
-      }
-    }, 400);
+    const admin = await connecterAdmin(adminChoisi.email, motDePasse);
+    setChargement(false);
+    if (admin) {
+      fermerModal();
+      onNavigate("admin");
+    } else {
+      setErreur("Mot de passe incorrect. Réessayez.");
+    }
   };
 
   // — Fermeture complète de la modal —

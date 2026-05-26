@@ -1,3 +1,4 @@
+import { clearSupabaseAccessToken, signInSupabase } from "@/app/lib/supabaseRest";
 export interface AdminAccount {
   id: string;
   prenom: string;
@@ -34,19 +35,31 @@ export const ADMINS: AdminAccount[] = [
 const STORAGE_ADMIN_CONNECTED = "admin";
 const STORAGE_ADMIN_USER = "admin_user";
 
-export function nomComplet(admin: Pick<AdminAccount, "prenom" | "nom">): string {
+export function nomComplet(
+  admin: Pick<AdminAccount, "prenom" | "nom">,
+): string {
   return `${admin.prenom} ${admin.nom}`.trim();
 }
 
-export function connecterAdmin(email: string, motDePasse: string): AdminAccount | null {
+export async function connecterAdmin(
+  email: string,
+  motDePasse: string,
+): Promise<AdminAccount | null> {
   const emailNormalise = email.trim().toLowerCase();
   const mdpNormalise = motDePasse.trim();
 
   const admin = ADMINS.find(
-    (item) => item.email.toLowerCase() === emailNormalise && item.password === mdpNormalise,
+    (item) =>
+      item.email.toLowerCase() === emailNormalise &&
+      item.password === mdpNormalise,
   );
 
   if (!admin) {
+    return null;
+  }
+
+  const signedIn = await signInSupabase(admin.email, mdpNormalise);
+  if (!signedIn) {
     return null;
   }
 
@@ -75,4 +88,5 @@ export function getAdminConnecte(): AdminUser | null {
 export function deconnecterAdmin(): void {
   localStorage.removeItem(STORAGE_ADMIN_CONNECTED);
   localStorage.removeItem(STORAGE_ADMIN_USER);
+  clearSupabaseAccessToken();
 }
