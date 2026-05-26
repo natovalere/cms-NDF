@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useState, type ChangeEvent, type FormEvent } from "react";
 import { User, Phone, Mail, FileText, Clock, AlertCircle } from "lucide-react";
 import { createAppointment } from "@/app/lib/appointmentsService";
 
@@ -42,6 +42,7 @@ export function AppointmentPage() {
       phone: "",
       email: "",
     };
+
     const normalizedPhone = formData.phone.replace(/\s+/g, "");
 
     if (!phoneRegex.test(normalizedPhone)) {
@@ -58,7 +59,7 @@ export function AppointmentPage() {
     return valid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) return;
@@ -189,7 +190,9 @@ export function AppointmentPage() {
                 className="w-full px-4 py-3 border-2 rounded-xl"
               >
                 <option value="">Sélectionnez un service</option>
-                <option value="Consultation gnrale">Consultation gnrale</option>
+                <option value="Consultation générale">
+                  Consultation générale
+                </option>
                 <option value="Pédiatrie">Pédiatrie</option>
                 <option value="Echographie">Echographie</option>
                 <option value="Gynécologie">Gynécologie</option>
@@ -198,7 +201,7 @@ export function AppointmentPage() {
                 <option value="Dermatologie">Dermatologie</option>
                 <option value="Rhumatologie">Rhumatologie</option>
                 <option value="Maternité">Maternité</option>
-                <option value="Kinsithérapie">Kinsithérapie</option>
+                <option value="Kinésithérapie">Kinésithérapie</option>
                 <option value="Hospitalisation">Hospitalisation</option>
               </select>
             </div>

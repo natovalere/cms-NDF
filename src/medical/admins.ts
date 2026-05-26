@@ -1,5 +1,4 @@
-﻿import { clearSupabaseAccessToken, signInSupabase } from "@/app/lib/supabaseRest";
-
+import { clearSupabaseAccessToken, signInSupabase } from "@/app/lib/supabaseRest";
 export interface AdminAccount {
   id: string;
   prenom: string;

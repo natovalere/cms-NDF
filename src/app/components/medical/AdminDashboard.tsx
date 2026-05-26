@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Calendar,
   Bell,
@@ -107,7 +107,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const handleLogout = () => {
     if (
       !confirm(
-        `D�connecter ${adminConnecte ? nomComplet(adminConnecte) : "l'administrateur"} ?`,
+        `Déconnecter ${adminConnecte ? nomComplet(adminConnecte) : "l'administrateur"} ?`,
       )
     )
       return;
@@ -118,7 +118,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   if (!adminConnecte) return null;
 
   const confirmerRDV = async (id: number) => {
-    const trace = creerTrace(adminConnecte, "Rendez-vous confirm�");
+    const trace = creerTrace(adminConnecte, "Rendez-vous confirmé");
     try {
       await updateAppointmentStatus(id, "confirmed", trace);
       await chargerDonnees();
@@ -214,7 +214,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <p className="text-sm text-[#6B7280]">
               Centre Medico-social Notre Dame de Fatima
             </p>
-
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <div className="w-7 h-7 bg-[#2563EB] rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {adminConnecte.avatar}
@@ -484,7 +483,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               <div className="space-y-4">
                 <h2 className="font-medium text-[#1F2937] flex items-center gap-2 text-sm">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  Rendez-vous confirm�s ({confirmedRDV})
+                  Rendez-vous confirmés ({confirmedRDV})
                 </h2>
                 {appointments.filter((a) => a.status === "confirmed").length ===
                 0 ? (

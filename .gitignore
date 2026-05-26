@@ -4,4 +4,3 @@ dist/
 .DS_Store
 *.local
 pnpm-workspace.yaml
-.pnpm-store/
